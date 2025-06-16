@@ -1,8 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.ext.declarative import declarative_base
-
-DATABASE_URL = "postgresql://super_user:123456@localhost/concert_api"
+DATABASE_URL = "postgresql://super_user:123456@localhost/test_final"
 
 engine = create_engine(DATABASE_URL, echo=True)
 
