@@ -1,9 +1,11 @@
 from __future__ import annotations
-from pydantic import BaseModel
-from typing import List, Optional
-from datetime import date, datetime
+from datetime import date
+from typing import Optional
 
-# ------------------- Play -------------------
+from pydantic import BaseModel
+
+
+# ---------- PLAY ----------
 class PlayBase(BaseModel):
     title: str
     duration: int
@@ -21,11 +23,11 @@ class PlayUpdate(BaseModel):
 
 class Play(PlayBase):
     id: int
-
     class Config:
-        form_attributes = True
+        orm_mode = True
 
-# ------------------- Actor -------------------
+
+# ---------- ACTOR ----------
 class ActorBase(BaseModel):
     name: str
     gender: str
@@ -41,19 +43,25 @@ class UpdateActor(BaseModel):
 
 class Actor(ActorBase):
     id: int
-
     class Config:
-        form_attributes = True
+        orm_mode = True
 
-# ------------------- ActorPlay -------------------
-class ActorPlay(BaseModel):
+
+# ---------- ACTOR-PLAY LINK ----------
+class ActorPlayBase(BaseModel):
     actor_id: int
     play_id: int
 
-    class Config:
-        form_attributes = True
+class CreateActorPlay(ActorPlayBase):
+    pass
 
-# ------------------- Director -------------------
+class ActorPlay(ActorPlayBase):
+    id: int
+    class Config:
+        orm_mode = True
+
+
+# ---------- DIRECTOR ----------
 class DirectorBase(BaseModel):
     name: str
     dob: date
@@ -69,37 +77,25 @@ class UpdateDirector(BaseModel):
 
 class Director(DirectorBase):
     id: int
-
     class Config:
-        form_attributes = True
+        orm_mode = True
 
-# ------------------- DirectorPlay -------------------
-class DirectorPlay(BaseModel):
+
+# ---------- DIRECTOR-PLAY LINK ----------
+class DirectorPlayBase(BaseModel):
     director_id: int
     play_id: int
 
-    class Config:
-        form_attributes = True
-
-# ------------------- ShowTime -------------------
-class ShowTimeBase(BaseModel):
-    date_time: datetime
-    play_id: int
-
-class CreateShowTime(ShowTimeBase):
+class CreateDirectorPlay(DirectorPlayBase):
     pass
 
-class UpdateShowTime(BaseModel):
-    date_time: Optional[datetime] = None
-    play_id: Optional[int] = None
-
-class ShowTime(ShowTimeBase):
+class DirectorPlay(DirectorPlayBase):
     id: int
-
     class Config:
-        form_attributes = True
+        orm_mode = True
 
-# ------------------- Seat -------------------
+
+# ---------- SEAT ----------
 class SeatBase(BaseModel):
     row_no: int
     seat_no: int
@@ -113,11 +109,29 @@ class UpdateSeat(BaseModel):
 
 class Seat(SeatBase):
     id: int
-
     class Config:
-        form_attributes = True
+        orm_mode = True
 
-# ------------------- Customer -------------------
+
+# ---------- SHOWTIME ----------
+class ShowTimeBase(BaseModel):
+    date: date
+    play_id: int
+
+class CreateShowTime(ShowTimeBase):
+    pass
+
+class UpdateShowTime(BaseModel):
+    date: Optional[date] = None
+    play_id: Optional[int] = None
+
+class ShowTime(ShowTimeBase):
+    id: int
+    class Config:
+        orm_mode = True
+
+
+# ---------- CUSTOMER ----------
 class CustomerBase(BaseModel):
     name: str
     telephone: str
@@ -131,89 +145,51 @@ class UpdateCustomer(BaseModel):
 
 class Customer(CustomerBase):
     id: int
-
     class Config:
-        form_attributes = True
+        orm_mode = True
 
-# ------------------- Price -------------------
+
+# ---------- PRICE ----------
 class PriceBase(BaseModel):
-    seat_row_no: int
-    seat_seat_no: int
-    showtime_date_time: datetime
-    showtime_play_id: int
+    seat_id: int
+    showtime_id: int
     price: float
 
 class CreatePrice(PriceBase):
     pass
 
 class UpdatePrice(BaseModel):
-    seat_row_no: Optional[int] = None
-    seat_seat_no: Optional[int] = None
-    showtime_date_time: Optional[datetime] = None
-    showtime_play_id: Optional[int] = None
+    seat_id: Optional[int] = None
+    showtime_id: Optional[int] = None
     price: Optional[float] = None
 
 class Price(PriceBase):
     id: int
-
     class Config:
-        form_attributes = True
+        orm_mode = True
 
-# ------------------- Ticket -------------------
+
+# ---------- TICKET ----------
 class TicketBase(BaseModel):
-    seat_row_no: int
-    seat_seat_no: int
-    showtime_date_time: datetime
-    showtime_play_id: int
+    ticket_no: Optional[str]
+    seat_id: int
+    showtime_id: int
     customer_id: int
-    ticket_no: Optional[str] = None
 
 class CreateTicket(TicketBase):
     pass
 
 class UpdateTicket(BaseModel):
-    seat_row_no: Optional[int] = None
-    seat_seat_no: Optional[int] = None
-    showtime_date_time: Optional[datetime] = None
-    showtime_play_id: Optional[int] = None
-    customer_id: Optional[int] = None
     ticket_no: Optional[str] = None
 
 class Ticket(TicketBase):
     id: int
-
     class Config:
-        form_attributes = True
+        orm_mode = True
 
-# ------------------- Relations -------------------
-class PlayWithRelations(Play):
-    director: Optional[Director]
-    showtimes: List[ShowTime] = []
-    actors: List[Actor] = []
+class Token(BaseModel):
+    access_token: str
+    token_type: str
 
-class ActorWithRelations(Actor):
-    plays: List[Play] = []
-
-class DirectorWithRelations(Director):
-    plays: List[Play] = []
-
-class ShowTimeWithRelations(ShowTime):
-    play: Play
-    tickets: List[Ticket] = []
-    prices: List[Price] = []
-
-class SeatWithRelations(Seat):
-    tickets: List[Ticket] = []
-    prices: List[Price] = []
-
-class CustomerWithRelations(Customer):
-    tickets: List[Ticket] = []
-
-class PriceWithRelations(Price):
-    seat: Seat
-    showtime: ShowTime
-
-class TicketWithRelations(Ticket):
-    seat: Seat
-    showtime: ShowTime
-    customer: Customer
+class TokenData(BaseModel):
+    username: str | None = None

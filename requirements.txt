@@ -1,5 +1,8 @@
-fastapi
+fastapi~=0.115.12
 uvicorn
 sqlalchemy~=2.0.41
 psycopg2-binary
 pydantic~=2.11.5
+pydantic-settings~=2.9.1
+python-jose~=3.5.0
+passlib~=1.7.4
