@@ -2,7 +2,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 
 # ---------- PLAY ----------
@@ -193,3 +193,20 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: str | None = None
+
+
+
+class UserCreate(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+    role: Optional[str] = "student"
+
+class UserOut(BaseModel):
+    id: int
+    username: str
+    email: str
+    role: str
+
+    class Config:
+        orm_mode = True
