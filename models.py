@@ -89,6 +89,7 @@ class Customer(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True)
     telephone = Column(String)
+    role = Column(String, default="customer")
 
     tickets = relationship("Ticket", back_populates="customer")
 
@@ -117,3 +118,14 @@ class Ticket(Base):
     seat = relationship("Seat", back_populates="tickets")
     showtime = relationship("ShowTime", back_populates="tickets")
     customer = relationship("Customer", back_populates="tickets")
+
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True)
+    email = Column(String, unique=True, index=True)
+    hashed_password = Column(String)
+    role = Column(String, default="student")
