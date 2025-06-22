@@ -1,16 +1,26 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
-from datetime import datetime
-
+from fastapi import BackgroundTasks
+import crud
+import models
 import schemas
 from crud import TicketServices
 from database import get_db
+from security.security_roles import require_role, get_current_user
+from models import Customer
+
 
 ticket_router = APIRouter(
     prefix="/tickets",
     tags=["Tickets"]
 )
+@ticket_router.post("/", response_model=schemas.Ticket)
+def book_ticket(
+    ticket: schemas.CreateTicket,
+    db: Session = Depends(get_db),
+    current_user: Customer = Depends(require_role("customer"))  # Only customers can book
+):
+    return TicketServices.book_ticket(db, ticket, current_user.id)
 
 @ticket_router.post("/", response_model=schemas.Ticket)
 async def create_ticket(ticket: schemas.CreateTicket, db: Session = Depends(get_db)):
@@ -39,3 +49,25 @@ async def partial_update_ticket(ticket_id: int, ticket_data: schemas.UpdateTicke
 async def delete_ticket(ticket_id: int, db: Session = Depends(get_db)):
     TicketServices.delete_ticket(db, ticket_id)
     return {"detail": "Ticket deleted successfully"}
+
+
+
+def send_booking_email(email: str, ticket_id: int):
+    # Simulate sending email
+    print(f"Sending booking confirmation to {email} for ticket ID {ticket_id}")
+
+@ticket_router.post("/", response_model=schemas.Ticket)
+def create_ticket(
+    ticket: schemas.CreateTicket,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
+    db_ticket = crud.TicketServices.create_ticket(db=db, ticket_data=ticket)
+
+    # Get customer email
+    customer = db.query(models.Customer).filter(models.Customer.id == ticket.customer_id).first()
+    if customer and customer.email:
+        background_tasks.add_task(send_booking_email, customer.email, db_ticket.id)
+
+    return db_ticket
+

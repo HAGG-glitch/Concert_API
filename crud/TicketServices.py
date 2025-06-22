@@ -62,3 +62,40 @@ def delete_ticket(db: Session, ticket_id: int):
         raise HTTPException(status_code=404, detail="Ticket not found")
     db.delete(ticket)
     db.commit()
+
+def book_ticket(db: Session, ticket_data: schemas.CreateTicket, customer_id: int) -> Ticket:
+    # Check if seat exists
+    seat = db.query(schemas.Seat).filter(schemas.Seat.id == ticket_data.seat_id).first()
+    if not seat:
+        raise HTTPException(status_code=404, detail="Seat not found")
+
+    # Check if showtime exists
+    showtime = db.query(schemas.ShowTime).filter(schemas.ShowTime.id == ticket_data.showtime_id).first()
+    if not showtime:
+        raise HTTPException(status_code=404, detail="Showtime not found")
+
+    # Check if customer exists
+    customer = db.query(schemas.Customer).filter(schemas.Customer.id == customer_id).first()
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+
+    # Check if seat is already booked for this showtime
+    existing_ticket = db.query(Ticket).filter(
+        Ticket.seat_id == ticket_data.seat_id,
+        Ticket.showtime_id == ticket_data.showtime_id
+    ).first()
+    if existing_ticket:
+        raise HTTPException(status_code=400, detail="Seat already booked for this showtime")
+
+    # Create the ticket
+    new_ticket = Ticket(
+        ticket_no=ticket_data.ticket_no,
+        seat_id=ticket_data.seat_id,
+        showtime_id=ticket_data.showtime_id,
+        customer_id=customer_id
+    )
+    db.add(new_ticket)
+    db.commit()
+    db.refresh(new_ticket)
+    return new_ticket
+

@@ -1,6 +1,9 @@
+from typing import List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import  Session
 
+import models
 from database import  get_db
 
 import schemas
@@ -37,3 +40,29 @@ async def partial_update_play(play_id: int, play_data: schemas.PlayUpdate, db: S
 async def delete_play(play_id: int, db: Session = Depends(get_db)):
     PlayServices.delete_play(db, play_id)
     return {"detail": "Play deleted successfully"}
+
+@play_router.get("/search", response_model=List[schemas.Play])
+def search_plays(
+    title: Optional[str] = None,
+    genre: Optional[str] = None,
+    director_name: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    query = db.query(models.Play).join(models.DirectorPlay).join(models.Director)
+
+    if title:
+        query = query.filter(models.Play.title.ilike(f"%{title}%"))
+    if genre:
+        query = query.filter(models.Play.genre.ilike(f"%{genre}%"))
+    if director_name:
+        query = query.filter(models.Director.name.ilike(f"%{director_name}%"))
+
+    return query.all()
+
+@play_router.get("/", response_model=List[schemas.Play])
+def get_plays_list(limit: int = 10, offset: int = 0, db: Session = Depends(get_db)):
+    return db.query(models.Play).offset(offset).limit(limit).all()
+
+
+
+

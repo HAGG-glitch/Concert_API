@@ -3,19 +3,15 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from schemas import Token
-from security.security import verify_password, create_access_token
-from models import Customer
 from database import get_db
+from security.auth_service import authenticate_user, create_access_token
 
-auth_router = APIRouter(
-    prefix="/auth"
-)
-
+auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @auth_router.post("/login", response_model=Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = db.query(Customer).filter(Customer.name == form_data.username).first()
-    if not user or not verify_password(form_data.password, user.hashed_password):
+    user = authenticate_user(db, form_data.username, form_data.password)
+    if not user:
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
     access_token = create_access_token(data={"sub": str(user.id)})
